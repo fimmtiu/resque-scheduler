@@ -334,11 +334,13 @@ module Resque
 
       # Sleeps and returns true
       def poll_sleep
-        handle_shutdown do
-          begin
-            poll_sleep_loop
-          ensure
-            @sleeping = false
+        handle_signals_with_operation do
+          handle_shutdown do
+            begin
+              poll_sleep_loop
+            ensure
+              @sleeping = false
+            end
           end
         end
         true
@@ -355,14 +357,10 @@ module Resque
             if remaining_sleep <= 0
               @do_break = true
             else
-              @do_break = handle_signals_with_operation do
-                sleep(remaining_sleep)
-              end
+              @do_break = sleep(remaining_sleep)
             end
             break if @do_break
           end
-        else
-          handle_signals_with_operation
         end
       end
 
